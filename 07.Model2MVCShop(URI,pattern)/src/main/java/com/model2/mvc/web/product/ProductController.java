@@ -2,7 +2,9 @@ package com.model2.mvc.web.product;
 
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -59,13 +62,27 @@ public class ProductController {
 	}
 
 	@RequestMapping(value="getProduct", method = RequestMethod.GET)
-	public String getProduct( @RequestParam("prodNo") int prodNo, Model model ) throws Exception {
+	public String getProduct( @RequestParam("prodNo") int prodNo, Model model,
+									@CookieValue(value="history", required=false) String history, HttpServletResponse response  ) throws Exception {
 		
 		System.out.println("/getProduct.do");
 		
 		Product product = productService.getProduct(prodNo);
 		product.setProdNo(prodNo); 
 		model.addAttribute("product", product);
+		
+		if(history == null || history.length() == 0) {
+			history = prodNo+"";
+		}else {
+			if(history.indexOf(prodNo+"") == -1) {
+				history =prodNo +","+ history;
+			}
+		}
+		Cookie cookie = new Cookie("history", history);
+		cookie.setMaxAge(-1);
+		cookie.setPath("/");
+		response.addCookie(cookie);
+		
 		
 		return "forward:/product/getProduct.jsp";
 	}
